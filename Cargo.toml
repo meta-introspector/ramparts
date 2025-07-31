@@ -93,3 +93,7 @@ chrono = "0.4"
 [dev-dependencies]
 tokio-test = "0.4"
 tempfile = "3.8"
+# Additional dependencies for comprehensive regression test suite
+serde_json = "1.0"  # For JSON test data and configuration parsing
+chrono = { version = "0.4", features = ["serde"] }  # For test timestamps and reporting
+anyhow = "1.0"  # For error handling in tests

@@ -1,0 +1,373 @@
+name: 🧪 Regression Test Suite
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run regression tests nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # Allow manual triggering
+    inputs:
+      test_category:
+        description: 'Test category to run (all, config, protocol, security, discovery, integration, errors)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - config
+          - protocol
+          - security
+          - discovery
+          - integration
+          - errors
+      critical_only:
+        description: 'Run only critical priority tests'
+        required: false
+        default: false
+        type: boolean
+      timeout:
+        description: 'Test timeout in seconds'
+        required: false
+        default: '300'
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Quick validation job
+  validate:
+    name: 🔍 Pre-flight Validation
+    runs-on: ubuntu-latest
+    outputs:
+      should-run-tests: ${{ steps.check.outputs.should-run }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+          components: rustfmt, clippy
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Check code formatting
+        run: cargo fmt -- --check
+
+      - name: Lint code
+        run: cargo clippy -- -D warnings
+
+      - name: Quick build check
+        run: cargo check --all-targets
+
+      - name: Validate test files exist
+        id: check
+        run: |
+          if [[ -f tests/regression_test_suite.rs && -f tests/mcp_protocol_tests.rs ]]; then
+            echo "should-run=true" >> $GITHUB_OUTPUT
+            echo "✅ Test files found"
+          else
+            echo "should-run=false" >> $GITHUB_OUTPUT
+            echo "❌ Test files missing"
+            exit 1
+          fi
+
+  # Main regression testing job
+  regression-tests:
+    name: 🧪 Regression Tests
+    runs-on: ${{ matrix.os }}
+    needs: validate
+    if: needs.validate.outputs.should-run-tests == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust: [stable, beta]
+        exclude:
+          # Reduce CI load by excluding some combinations
+          - os: windows-latest
+            rust: beta
+          - os: macos-latest
+            rust: beta
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          profile: minimal
+          override: true
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-${{ matrix.rust }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build project
+        run: cargo build --verbose
+
+      - name: Build tests
+        run: cargo test --no-run --verbose
+
+      - name: Run regression test suite
+        id: regression-tests
+        run: |
+          # Determine test parameters
+          CATEGORY="${{ github.event.inputs.test_category || 'all' }}"
+          TIMEOUT="${{ github.event.inputs.timeout || '300' }}"
+          CRITICAL="${{ github.event.inputs.critical_only || 'false' }}"
+          
+          # Build test command
+          if [[ "$CRITICAL" == "true" ]]; then
+            echo "Running critical tests only..."
+            ./scripts/run_regression_tests.sh -c -v -t $TIMEOUT -o test_report_${{ matrix.os }}_${{ matrix.rust }}.json
+          else
+            echo "Running $CATEGORY tests..."
+            ./scripts/run_regression_tests.sh -v -t $TIMEOUT $CATEGORY -o test_report_${{ matrix.os }}_${{ matrix.rust }}.json
+          fi
+        shell: bash
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}-${{ matrix.rust }}
+          path: |
+            test_report_*.json
+            target/debug/deps/regression_test_suite-*
+          retention-days: 30
+
+      - name: Parse test results
+        if: always()
+        run: |
+          if [[ -f "test_report_${{ matrix.os }}_${{ matrix.rust }}.json" ]]; then
+            echo "📊 Test Report Summary:"
+            # Extract key metrics from JSON report if available
+            if command -v jq &> /dev/null; then
+              jq -r '.summary | "Tests: \(.total_tests), Passed: \(.passed), Failed: \(.failed), Success Rate: \(.success_rate)%"' "test_report_${{ matrix.os }}_${{ matrix.rust }}.json" || echo "Unable to parse JSON report"
+            else
+              echo "JSON report generated but jq not available for parsing"
+            fi
+          else
+            echo "No test report generated"
+          fi
+        shell: bash
+
+  # Security-focused testing job
+  security-tests:
+    name: 🔒 Security-Focused Tests
+    runs-on: ubuntu-latest
+    needs: validate
+    if: needs.validate.outputs.should-run-tests == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: security-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install security audit tools
+        run: |
+          cargo install cargo-audit
+          cargo install cargo-deny
+
+      - name: Security audit
+        run: cargo audit
+
+      - name: License and dependency check
+        run: cargo deny check
+
+      - name: Run security-focused regression tests
+        run: ./scripts/run_regression_tests.sh -v security -o security_test_report.json
+
+      - name: Upload security test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: security-test-results
+          path: security_test_report.json
+          retention-days: 30
+
+  # Performance testing job
+  performance-tests:
+    name: ⚡ Performance Tests
+    runs-on: ubuntu-latest
+    needs: validate
+    if: needs.validate.outputs.should-run-tests == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: perf-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build optimized binary
+        run: cargo build --release
+
+      - name: Run performance regression tests
+        run: ./scripts/run_regression_tests.sh -v integration -t 600 -o performance_test_report.json
+
+      - name: Upload performance test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: performance-test-results
+          path: performance_test_report.json
+          retention-days: 30
+
+  # Results aggregation and reporting
+  report:
+    name: 📊 Test Report
+    runs-on: ubuntu-latest
+    needs: [regression-tests, security-tests, performance-tests]
+    if: always()
+    steps:
+      - name: Download all test artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate comprehensive report
+        run: |
+          echo "# 🧪 Regression Test Suite Results" > test_summary.md
+          echo "" >> test_summary.md
+          echo "**Workflow:** ${{ github.workflow }}" >> test_summary.md
+          echo "**Run ID:** ${{ github.run_id }}" >> test_summary.md
+          echo "**Trigger:** ${{ github.event_name }}" >> test_summary.md
+          echo "**Commit:** ${{ github.sha }}" >> test_summary.md
+          echo "**Branch:** ${{ github.ref_name }}" >> test_summary.md
+          echo "" >> test_summary.md
+          
+          echo "## Test Results Summary" >> test_summary.md
+          echo "" >> test_summary.md
+          
+          # Count test artifacts
+          TOTAL_ARTIFACTS=$(find . -name "test-results-*" -type d | wc -l)
+          echo "- **Total Test Runs:** $TOTAL_ARTIFACTS" >> test_summary.md
+          
+          # Check for security results
+          if [[ -d "security-test-results" ]]; then
+            echo "- **Security Tests:** ✅ Completed" >> test_summary.md
+          else
+            echo "- **Security Tests:** ❌ Failed or Skipped" >> test_summary.md
+          fi
+          
+          # Check for performance results
+          if [[ -d "performance-test-results" ]]; then
+            echo "- **Performance Tests:** ✅ Completed" >> test_summary.md
+          else
+            echo "- **Performance Tests:** ❌ Failed or Skipped" >> test_summary.md
+          fi
+          
+          echo "" >> test_summary.md
+          echo "## Detailed Results" >> test_summary.md
+          echo "" >> test_summary.md
+          
+          # List all test result files
+          find . -name "*.json" -type f | while read -r file; do
+            echo "- 📄 \`$(basename "$file")\`" >> test_summary.md
+          done
+
+      - name: Upload comprehensive report
+        uses: actions/upload-artifact@v3
+        with:
+          name: comprehensive-test-report
+          path: test_summary.md
+          retention-days: 90
+
+      - name: Comment on PR (if applicable)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            
+            if (fs.existsSync('test_summary.md')) {
+              const summary = fs.readFileSync('test_summary.md', 'utf8');
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: summary
+              });
+            }
+
+  # Cleanup job
+  cleanup:
+    name: 🧹 Cleanup
+    runs-on: ubuntu-latest
+    needs: [report]
+    if: always()
+    steps:
+      - name: Clean up old artifacts
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: artifacts } = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            
+            // Keep only the most recent comprehensive report
+            const oldArtifacts = artifacts.artifacts.filter(artifact => 
+              artifact.name.includes('test-results-') && 
+              new Date(artifact.created_at) < new Date(Date.now() - 7*24*60*60*1000) // 7 days old
+            );
+            
+            for (const artifact of oldArtifacts) {
+              console.log(`Deleting old artifact: ${artifact.name}`);
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id,
+              });
+            } 
