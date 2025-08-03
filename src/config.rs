@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
@@ -310,6 +311,9 @@ pub struct CursorServerConfig {
 pub struct WindsurfMCPConfig {
     /// Servers configuration
     pub servers: Option<HashMap<String, WindsurfServerConfig>>,
+    /// Alternative servers configuration (mcpServers format)
+    #[serde(rename = "mcpServers")]
+    pub mcp_servers: Option<HashMap<String, WindsurfServerConfig>>,
     /// Global configuration
     pub global: Option<MCPGlobalOptions>,
 }
@@ -517,7 +521,9 @@ impl From<CursorMCPConfig> for MCPConfig {
 
 impl From<WindsurfMCPConfig> for MCPConfig {
     fn from(windsurf_config: WindsurfMCPConfig) -> Self {
-        let servers = windsurf_config.servers.map(|servers_map| {
+        // Use servers first, then fall back to mcp_servers
+        let servers_map = windsurf_config.servers.or(windsurf_config.mcp_servers);
+        let servers = servers_map.map(|servers_map| {
             servers_map
                 .into_iter()
                 .map(|(name, server_config)| MCPServerConfig {
@@ -765,6 +771,10 @@ impl MCPConfigManager {
                 paths.extend(Self::get_unix_paths());
             }
         }
+
+        // Deduplicate paths to avoid duplicate entries
+        let mut seen = std::collections::HashSet::new();
+        paths.retain(|(path, _)| seen.insert(path.clone()));
 
         paths
     }
@@ -1030,6 +1040,11 @@ impl MCPConfigManager {
                     .join("mcp_config.json"),
                 MCPClient::Windsurf,
             ));
+            // Add direct windsurf config path
+            paths.push((
+                home_dir.join(".windsurf").join("mcp.json"),
+                MCPClient::Windsurf,
+            ));
 
             // VS Code - multiple configuration locations
             paths.push((
@@ -1272,29 +1287,52 @@ impl MCPConfigManager {
                         continue;
                     }
 
-                    // Display what was found in this config file
-                    let server_count = config.servers.as_ref().map(|s| s.len()).unwrap_or(0);
-                    println!(
-                        "📁 {} IDE config: {} ({} servers)",
-                        client.name(),
-                        path.display(),
-                        server_count
-                    );
+                    // Only display configs that have servers
+                    let server_count = config.servers.as_ref().map_or(0, Vec::len);
+                    if server_count > 0 {
+                        println!(
+                            "📁 {} IDE config: {} ({} servers)",
+                            client.name().cyan().bold(),
+                            path.display().to_string().bright_black(),
+                            server_count.to_string().green().bold()
+                        );
 
-                    if let Some(ref servers) = config.servers {
-                        for server in servers {
-                            let server_name = server.name.as_deref().unwrap_or("unnamed");
-                            let server_type = if server.command.is_some() {
-                                "STDIO"
-                            } else {
-                                "HTTP"
-                            };
-                            println!(
-                                "  └─ {} [{}]: {}",
-                                server_name,
-                                server_type,
-                                server.to_display_url()
-                            );
+                        if let Some(ref servers) = config.servers {
+                            for server in servers {
+                                let server_name = server.name.as_deref().unwrap_or("unnamed");
+                                let (server_type, display_url) = if server.command.is_some() {
+                                    // For STDIO servers, show clean command format
+                                    let clean_url = if let Some(command) = &server.command {
+                                        if let Some(args) = &server.args {
+                                            if args.is_empty() {
+                                                command.clone()
+                                            } else {
+                                                format!("{} {}", command, args.join(" "))
+                                            }
+                                        } else {
+                                            command.clone()
+                                        }
+                                    } else {
+                                        "unknown command".to_string()
+                                    };
+                                    ("stdio", format!("({clean_url})"))
+                                } else {
+                                    // For HTTP/HTTPS servers, determine protocol from URL
+                                    let url = server.to_display_url();
+                                    let protocol = if url.starts_with("https://") {
+                                        "https"
+                                    } else {
+                                        "http"
+                                    };
+                                    (protocol, url)
+                                };
+                                println!(
+                                    "  └─ {} [{}]: {}",
+                                    server_name.yellow().bold(),
+                                    server_type.magenta(),
+                                    display_url.bright_white()
+                                );
+                            }
                         }
                     }
 
@@ -1398,6 +1436,25 @@ impl MCPConfigManager {
                     }
                 }
             }
+            Some(MCPClient::Windsurf) => {
+                if let Ok(windsurf_config) = serde_json::from_str::<WindsurfMCPConfig>(&content) {
+                    debug!("Parsed as Windsurf MCP configuration format");
+                    return Ok(windsurf_config.into());
+                }
+            }
+            Some(MCPClient::ClaudeCode) => {
+                if let Ok(claude_code_config) = serde_json::from_str::<ClaudeCodeConfig>(&content) {
+                    debug!("Parsed as Claude Code configuration format");
+                    return Ok(claude_code_config.into());
+                }
+            }
+            Some(MCPClient::Gemini) => {
+                // Gemini uses mcpServers format similar to cursor
+                if let Ok(cursor_config) = serde_json::from_str::<CursorMCPConfig>(&content) {
+                    debug!("Parsed as Gemini MCP configuration format");
+                    return Ok(Self::convert_cursor_config(cursor_config));
+                }
+            }
             _ => {}
         }
 
@@ -1438,11 +1495,22 @@ impl MCPConfigManager {
         let servers = cursor_config.mcp_servers.map(|mcp_servers| {
             mcp_servers
                 .into_iter()
-                .filter_map(|(name, server_config)| {
-                    // Use explicit URL first, then build from transport config
-                    let url = if let Some(url) = server_config.url {
-                        url
+                .map(|(name, server_config)| {
+                    // Handle both HTTP and STDIO servers
+                    if let Some(url) = server_config.url {
+                        // HTTP server with explicit URL
+                        MCPServerConfig {
+                            name: Some(name),
+                            url: Some(url),
+                            command: None,
+                            args: None,
+                            env: server_config.env,
+                            description: server_config.description,
+                            auth_headers: server_config.headers,
+                            options: None,
+                        }
                     } else if let Some(transport) = &server_config.transport {
+                        // HTTP server with transport config
                         let host = transport.host.as_deref().unwrap_or("localhost");
                         let port = transport.port.unwrap_or(8080);
                         #[allow(clippy::match_same_arms)]
@@ -1451,22 +1519,30 @@ impl MCPConfigManager {
                             Some("https") => "https",
                             _ => "http",
                         };
-                        format!("{scheme}://{host}:{port}")
+                        let url = format!("{scheme}://{host}:{port}");
+                        MCPServerConfig {
+                            name: Some(name),
+                            url: Some(url),
+                            command: None,
+                            args: None,
+                            env: server_config.env,
+                            description: server_config.description,
+                            auth_headers: server_config.headers,
+                            options: None,
+                        }
                     } else {
-                        // Skip servers without proper configuration
-                        return None;
-                    };
-
-                    Some(MCPServerConfig {
-                        name: Some(name),
-                        url: Some(url),
-                        command: None,
-                        args: None,
-                        env: None,
-                        description: server_config.description,
-                        auth_headers: server_config.headers, // Now supports auth headers at server level
-                        options: None, // Could be extended to convert any server-specific options
-                    })
+                        // STDIO server with command and args
+                        MCPServerConfig {
+                            name: Some(name),
+                            url: None,
+                            command: server_config.command,
+                            args: server_config.args,
+                            env: server_config.env,
+                            description: server_config.description,
+                            auth_headers: server_config.headers,
+                            options: None,
+                        }
+                    }
                 })
                 .collect()
         });

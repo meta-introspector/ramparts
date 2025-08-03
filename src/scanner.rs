@@ -1194,8 +1194,8 @@ impl MCPScanner {
 
         // Debug: Show that we loaded MCP config
         println!(
-            "🔍 Loaded MCP configuration with {} servers",
-            config.servers.as_ref().map(|s| s.len()).unwrap_or(0)
+            "🔍 Loaded MCP configuration with {} unique servers (after deduplication)",
+            config.servers.as_ref().map_or(0, Vec::len)
         );
 
         let mut results = Vec::new();
