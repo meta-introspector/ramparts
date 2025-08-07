@@ -1,0 +1,152 @@
+# Namespaced Security Scan Command
+# File: ~/.gemini/commands/security/scan.toml or .gemini/commands/security/scan.toml
+# Usage: /security:scan <target>
+
+description = "Advanced MCP server security scanning with detailed vulnerability analysis"
+
+prompt = """
+I need to perform an advanced security scan with detailed vulnerability analysis.
+
+Target: {{args}}
+
+Execute this advanced security scanning workflow:
+
+1. **Pre-Scan Analysis**:
+   
+   **Target Assessment:**
+   - Analyze target type and format: {{args}}
+   - Determine appropriate scanning approach
+   - Identify potential security scope and attack vectors
+   - Estimate scan complexity and duration
+
+2. **Advanced Security Scan**:
+   
+   Execute comprehensive Ramparts scan:
+   `ramparts scan "{{args}}" --detailed --report --format json`
+   
+   **Scan Parameters:**
+   - Enable all security detection modules
+   - Use maximum detail level for analysis
+   - Generate comprehensive report output
+   - Include static analysis and runtime checks
+
+3. **Vulnerability Classification**:
+   
+   **🚨 CRITICAL Vulnerabilities (CVSS 9.0-10.0):**
+   - Remote code execution potential
+   - Authentication bypass mechanisms
+   - Complete system compromise risks
+   - Data exfiltration capabilities
+   
+   **⚠️ HIGH Vulnerabilities (CVSS 7.0-8.9):**
+   - Privilege escalation vectors
+   - Sensitive data exposure
+   - Cross-origin security violations
+   - Injection attack vulnerabilities
+   
+   **📋 MEDIUM Vulnerabilities (CVSS 4.0-6.9):**
+   - Information disclosure issues
+   - Denial of service potential
+   - Configuration weaknesses
+   - Input validation bypasses
+   
+   **ℹ️ LOW/INFO Findings (CVSS 0.1-3.9):**
+   - Security best practice violations
+   - Potential security improvements
+   - Informational security notes
+   - Hardening recommendations
+
+4. **Detailed Vulnerability Analysis**:
+   
+   For each vulnerability found, provide:
+   
+   **🔍 Vulnerability Details:**
+   - CVE/CWE reference (if applicable)
+   - CVSS score and vector
+   - Affected component (tool/resource/prompt)
+   - Vulnerability description and context
+   
+   **🎯 Exploitation Scenario:**
+   - Attack vector and methodology
+   - Required attacker capabilities
+   - Potential impact and consequences
+   - Likelihood of successful exploitation
+   
+   **🛡️ Remediation Guide:**
+   - Step-by-step fix instructions
+   - Code changes or configuration updates
+   - Testing and validation procedures
+   - Prevention strategies for similar issues
+
+5. **Security Architecture Analysis**:
+   
+   **🏗️ Architecture Security Assessment:**
+   - MCP server design security review
+   - Trust boundary analysis
+   - Data flow security evaluation
+   - Component interaction security
+
+   **🔒 Access Control Analysis:**
+   - Authentication mechanism review
+   - Authorization control evaluation
+   - Session management security
+   - API security implementation
+
+6. **Threat Modeling**:
+   
+   **🎭 Threat Actor Analysis:**
+   - Potential attacker profiles
+   - Attack motivation and capabilities
+   - Likely attack vectors and methods
+   - Risk assessment per threat type
+   
+   **🌐 Attack Surface Mapping:**
+   - External attack vectors
+   - Internal threat scenarios
+   - Supply chain security risks
+   - Third-party integration risks
+
+7. **Compliance and Standards Assessment**:
+   
+   **📜 Security Standards Compliance:**
+   - OWASP Top 10 compliance check
+   - NIST Cybersecurity Framework alignment
+   - Industry-specific security requirements
+   - Regulatory compliance considerations
+   
+   **🎯 Security Control Effectiveness:**
+   - Preventive control assessment
+   - Detective control evaluation
+   - Corrective control analysis
+   - Compensating control identification
+
+8. **Advanced Recommendations**:
+   
+   **🔧 Technical Improvements:**
+   - Security architecture enhancements
+   - Implementation best practices
+   - Security tool and library recommendations
+   - Monitoring and alerting strategies
+   
+   **📚 Process Improvements:**
+   - Security development lifecycle integration
+   - Code review security focus areas
+   - Security testing methodology
+   - Incident response preparation
+
+9. **Executive Security Report**:
+   
+   **📊 Security Metrics Dashboard:**
+   - Overall security score (0-100)
+   - Vulnerability density metrics
+   - Security trend analysis
+   - Benchmark comparison data
+   
+   **💼 Business Impact Assessment:**
+   - Risk to business operations
+   - Potential financial impact
+   - Regulatory compliance risks
+   - Reputation and trust implications
+
+Execute this advanced security scan and provide the comprehensive vulnerability analysis and recommendations.
+"""

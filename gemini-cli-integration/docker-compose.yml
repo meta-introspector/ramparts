@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  ramparts-gemini-integration:
+    build: .
+    container_name: ramparts-gemini-cli
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - RAMPARTS_PORT=3001
+      - RAMPARTS_TIMEOUT=300
+      - RAMPARTS_HTTP_TIMEOUT=60
+      - RAMPARTS_LOG_LEVEL=info
+    volumes:
+      # Mount Gemini CLI configuration
+      - ~/.gemini:/home/ramparts/.gemini
+      # Mount project directory for project-level commands
+      - ./.gemini:/app/.gemini
+      # Mount logs
+      - ./logs:/var/log/ramparts
+    networks:
+      - ramparts-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Ramparts backend server
+  ramparts-backend:
+    image: ramparts/server:latest
+    container_name: ramparts-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - RUST_LOG=info
+      - RAMPARTS_HOST=0.0.0.0
+      - RAMPARTS_PORT=3000
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./rules:/app/rules:ro
+      - ./logs:/var/log/ramparts
+    networks:
+      - ramparts-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: Demo and development tools
+  gemini-cli-demo:
+    image: node:18-alpine
+    container_name: gemini-cli-demo
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - ~/.gemini:/root/.gemini
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-your-api-key-here}
+      - NODE_ENV=development
+    networks:
+      - ramparts-network
+    depends_on:
+      - ramparts-gemini-integration
+    command: |
+      sh -c "
+        echo 'Installing Gemini CLI and setting up demo...'
+        npm install -g @google/gemini-cli
+        
+        echo 'Setting up Ramparts integration...'
+        ./scripts/setup-complete-integration.sh --skip-checks
+        
+        echo 'Demo environment ready! Run: docker exec -it gemini-cli-demo gemini'
+        tail -f /dev/null
+      "
+
+networks:
+  ramparts-network:
+    driver: bridge
+
+volumes:
+  ramparts-logs:
+    driver: local

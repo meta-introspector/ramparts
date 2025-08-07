@@ -1,0 +1,65 @@
+{
+  "name": "ramparts-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Ramparts security scanner integration with Gemini CLI and other MCP clients",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "test": "npm run build && node dist/index.js --help",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts"
+  },
+  "keywords": [
+    "mcp",
+    "security",
+    "scanner",
+    "ramparts",
+    "gemini",
+    "ai",
+    "model-context-protocol",
+    "vulnerability-scanner",
+    "security-audit",
+    "mcp-server"
+  ],
+  "author": "Javelin",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/getjavelin/ramparts.git",
+    "directory": "gemini-cli-integration/mcp-server"
+  },
+  "homepage": "https://github.com/getjavelin/ramparts#readme",
+  "bugs": {
+    "url": "https://github.com/getjavelin/ramparts/issues"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.7.0",
+    "axios": "^1.6.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "bin": {
+    "ramparts-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ]
+}

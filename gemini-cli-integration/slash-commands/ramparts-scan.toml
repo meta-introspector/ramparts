@@ -1,0 +1,71 @@
+# Ramparts Security Scan Command
+# File: ~/.gemini/commands/ramparts-scan.toml or .gemini/commands/ramparts-scan.toml
+
+description = "Scan an MCP server for security vulnerabilities using Ramparts"
+
+prompt = """
+I need to perform a comprehensive security scan of an MCP server using Ramparts.
+
+Target: {{args}}
+
+Please execute the following security scanning workflow:
+
+1. **Determine Scan Type**:
+   - If target starts with "http" or "https": Direct MCP server scan
+   - If target is "config" or empty: Scan IDE MCP configurations  
+   - If target contains "stdio:": STDIO MCP server scan
+   - If multiple URLs (comma-separated): Batch scan
+
+2. **Execute Ramparts Scan**:
+   For direct URL: `ramparts scan "{{args}}" --detailed --report --format json`
+   For config scan: `ramparts scan-config --detailed --report --format json`
+   For batch scan: Split URLs and scan each individually
+
+3. **Security Analysis**:
+   After running the scan, provide comprehensive analysis including:
+   
+   **🔍 Scan Summary:**
+   - Target(s) scanned
+   - Total tools, resources, and prompts analyzed
+   - Scan duration and timestamp
+   
+   **🚨 Security Findings:**
+   - CRITICAL issues (immediate action required)
+   - HIGH priority vulnerabilities  
+   - MEDIUM priority concerns
+   - LOW priority observations
+   
+   **📊 Risk Assessment:**
+   - Overall security posture (Secure/At Risk/Vulnerable)
+   - Attack surface analysis
+   - Potential impact assessment
+   
+   **🛡️ Recommendations:**
+   - Immediate remediation steps for critical issues
+   - Best practices for MCP server security
+   - Monitoring and alerting suggestions
+   - Follow-up actions needed
+
+4. **Report Generation**:
+   If any security issues are found, provide:
+   - Detailed explanation of each vulnerability
+   - Proof of concept or example exploitation
+   - Step-by-step remediation guide
+   - Prevention strategies for similar issues
+
+5. **Next Steps**:
+   Based on findings, suggest appropriate actions:
+   - If CRITICAL: "🚨 URGENT: Address critical vulnerabilities immediately"
+   - If HIGH: "⚠️ PRIORITY: Schedule remediation within 24-48 hours" 
+   - If MEDIUM/LOW: "📋 PLANNED: Include in next security review cycle"
+   - If CLEAN: "✅ SECURE: No immediate action required, continue monitoring"
+
+Remember to:
+- Use clear, actionable language
+- Prioritize findings by risk level
+- Provide specific remediation steps
+- Include relevant security best practices
+- Suggest tools or resources for fixing issues
+
+Execute the security scan now and provide the comprehensive analysis.
+"""

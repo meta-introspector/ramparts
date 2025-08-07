@@ -1,0 +1,133 @@
+# Ramparts Comprehensive Security Audit Command  
+# File: ~/.gemini/commands/ramparts-audit.toml or .gemini/commands/ramparts-audit.toml
+
+description = "Perform comprehensive security audit of all MCP servers in current environment"
+
+prompt = """
+I need to perform a comprehensive security audit of all MCP servers in my development environment.
+
+Scope: {{args}}
+
+Please execute this complete security audit workflow:
+
+1. **Environment Discovery**:
+   First, discover all MCP configurations in the environment:
+   `ramparts scan-config --detailed --format json`
+   
+   This will find MCP servers configured in:
+   - Cursor IDE (~/.cursor/mcp.json)
+   - VS Code (~/.vscode/mcp.json) 
+   - Claude Desktop (~/.config/claude/claude_desktop_config.json)
+   - Windsurf IDE (~/.codeium/windsurf/mcp_config.json)
+   - Project-specific configurations (.gemini/settings.json)
+
+2. **Individual Server Analysis**:
+   For each discovered MCP server, perform detailed security scan:
+   `ramparts scan [server-url] --detailed --report --format json`
+   
+   Analyze each server for:
+   - Tool security vulnerabilities
+   - Resource access controls
+   - Prompt injection risks
+   - Authentication mechanisms
+   - Data handling practices
+
+3. **Comprehensive Risk Assessment**:
+   
+   **📊 Executive Summary:**
+   - Total MCP servers discovered: [count]
+   - Security posture overview: [Secure/At Risk/Vulnerable]
+   - Critical vulnerabilities found: [count]
+   - Overall risk score: [High/Medium/Low]
+   
+   **🔍 Detailed Findings by Server:**
+   For each server, provide:
+   - Server name and URL/command
+   - Security status (✅ Secure / ⚠️ Issues / 🚨 Vulnerable)
+   - Vulnerability count by severity
+   - Key security concerns
+   - Recommended actions
+
+4. **Security Compliance Assessment**:
+   
+   **🛡️ Security Best Practices Compliance:**
+   - ✅/❌ Input validation and sanitization
+   - ✅/❌ Authentication and authorization
+   - ✅/❌ Secure data handling
+   - ✅/❌ Error handling and logging
+   - ✅/❌ Network security controls
+   - ✅/❌ Secrets management
+   
+   **📋 Compliance Gaps:**
+   - List areas not meeting security standards
+   - Impact assessment for each gap
+   - Remediation priority and timeline
+
+5. **Risk Prioritization Matrix**:
+   
+   Create a prioritized list of all findings:
+   
+   **🚨 CRITICAL (Fix Immediately):**
+   - [List critical vulnerabilities across all servers]
+   - Estimated time to exploit: [timeframe]
+   - Business impact: [High/Medium/Low]
+   
+   **⚠️ HIGH (Fix Within 48 Hours):**
+   - [List high-priority issues]
+   - Potential security impact
+   - Recommended timeline for fixes
+   
+   **📋 MEDIUM/LOW (Schedule for Next Sprint):**
+   - [List medium/low priority items]
+   - Long-term security improvements
+   - Preventive measures
+
+6. **Remediation Roadmap**:
+   
+   **Phase 1 - Immediate Actions (0-24 hours):**
+   - Critical vulnerability fixes
+   - Emergency security patches
+   - Temporary mitigations
+   
+   **Phase 2 - Short-term Improvements (1-7 days):**
+   - High-priority vulnerability remediation
+   - Security configuration hardening
+   - Monitoring implementation
+   
+   **Phase 3 - Long-term Security Enhancement (1-4 weeks):**
+   - Architecture security improvements
+   - Security policy implementation
+   - Team training and processes
+
+7. **Monitoring and Alerting Recommendations**:
+   
+   **🔔 Continuous Monitoring Setup:**
+   - Automated security scanning schedule
+   - Alert thresholds and notification channels
+   - Security metrics and KPIs to track
+   - Integration with existing monitoring systems
+
+8. **Security Governance**:
+   
+   **📚 Recommended Policies:**
+   - MCP server security standards
+   - Third-party server evaluation process
+   - Security review requirements
+   - Incident response procedures
+   
+   **👥 Team Responsibilities:**
+   - Security champion assignments
+   - Regular security review schedule
+   - Training and awareness programs
+
+9. **Executive Report Summary**:
+   
+   Generate a concise executive summary suitable for leadership:
+   - Current security posture assessment
+   - Key risks and potential business impact
+   - Investment required for remediation
+   - Timeline for achieving secure state
+   - Ongoing security program recommendations
+
+Execute this comprehensive security audit now and provide the detailed analysis and recommendations.
+"""

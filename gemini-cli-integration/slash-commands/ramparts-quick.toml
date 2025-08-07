@@ -1,0 +1,117 @@
+# Ramparts Quick Security Check Command
+# File: ~/.gemini/commands/ramparts-quick.toml or .gemini/commands/ramparts-quick.toml
+
+description = "Quick security health check of MCP servers - fast assessment for immediate feedback"
+
+prompt = """
+I need a quick security health check for immediate feedback.
+
+Target: {{args}}
+
+Please perform a rapid security assessment with these priorities:
+
+1. **Quick Scan Execution**:
+   
+   Based on target type:
+   - If empty or "config": `ramparts scan-config --format json`
+   - If URL provided: `ramparts scan "{{args}}" --format json`
+   - If "all": Scan both config and any specified URLs
+   
+   Focus on speed - get basic security status quickly.
+
+2. **Immediate Risk Identification**:
+   
+   **🚨 CRITICAL ALERTS** (Show immediately if found):
+   - Command injection vulnerabilities
+   - Path traversal attacks (../../../etc/passwd)
+   - SQL injection risks
+   - Authentication bypass issues
+   - Secrets exposure (API keys, tokens, passwords)
+   
+   **⚠️ HIGH PRIORITY WARNINGS**:
+   - Tool poisoning (misleading tool descriptions)
+   - Cross-origin escalation risks
+   - Unsafe file operations
+   - Privilege escalation potential
+
+3. **Security Status Summary**:
+   
+   Provide clear, immediate status indication:
+   
+   **✅ SECURE STATUS:**
+   ```
+   🛡️ SECURITY STATUS: GOOD
+   • No critical vulnerabilities detected
+   • No high-priority security issues
+   • MCP servers appear secure for use
+   • Last scanned: [timestamp]
+   ```
+   
+   **⚠️ CAUTION STATUS:**
+   ```
+   ⚠️ SECURITY STATUS: NEEDS ATTENTION  
+   • [X] medium-priority issues detected
+   • No critical vulnerabilities found
+   • Review recommended within 7 days
+   • Issues: [brief list]
+   ```
+   
+   **🚨 URGENT STATUS:**
+   ```
+   🚨 SECURITY STATUS: CRITICAL ISSUES FOUND
+   • [X] critical vulnerabilities detected
+   • [X] high-priority security risks
+   • IMMEDIATE ACTION REQUIRED
+   • Do not use in production until fixed
+   ```
+
+4. **Quick Action Items**:
+   
+   **If CRITICAL issues found:**
+   - 🛑 **STOP**: Do not use these MCP servers in production
+   - 🔧 **FIX**: [List specific critical fixes needed]
+   - ✅ **VERIFY**: Re-scan after fixes: `/ramparts-quick [target]`
+   
+   **If HIGH issues found:**
+   - ⏰ **SCHEDULE**: Plan remediation within 24-48 hours
+   - 🔍 **DETAIL**: Run full audit: `/ramparts-audit`
+   - 📋 **TRACK**: Monitor for exploitation attempts
+   
+   **If MEDIUM/LOW issues found:**
+   - 📅 **PLAN**: Include in next security review cycle
+   - 📊 **BASELINE**: Document current security posture
+   - 🔄 **MONITOR**: Set up regular scanning schedule
+
+5. **Next Steps Recommendation**:
+   
+   Based on findings, suggest immediate next actions:
+   
+   **For SECURE status:**
+   - ✅ Continue using MCP servers safely
+   - 📅 Schedule next security check in 30 days
+   - 🔔 Set up monitoring alerts for changes
+   
+   **For CAUTION status:**
+   - 📋 Review medium-priority issues when convenient
+   - 🔍 Consider running full audit: `/ramparts-audit`
+   - 📊 Establish security baseline and monitoring
+   
+   **For URGENT status:**
+   - 🚨 Address critical issues immediately
+   - 🛑 Disable vulnerable MCP servers until fixed
+   - 🔧 Get detailed remediation steps: `/ramparts-scan [specific-server]`
+   - ✅ Verify fixes with re-scan
+
+6. **Quick Security Tips**:
+   
+   **🛡️ Immediate Security Improvements:**
+   - Always validate MCP server sources
+   - Use authentication headers where possible
+   - Limit MCP server permissions to minimum required
+   - Regularly update MCP server configurations
+   - Monitor MCP server activity and logs
+
+**Keep this assessment concise, actionable, and focused on immediate security concerns. Prioritize speed and clarity over comprehensive analysis.**
+
+Execute the quick security check now and provide immediate feedback.
+"""

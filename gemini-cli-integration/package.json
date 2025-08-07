@@ -1,0 +1,91 @@
+{
+  "name": "ramparts-gemini-cli-integration",
+  "version": "1.0.0",
+  "description": "Complete Ramparts security scanning integration for Gemini CLI with TOML commands and MCP server",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "install-slash-commands": "bash scripts/install-slash-commands.sh",
+    "install-mcp-server": "bash scripts/install-mcp-server.sh",
+    "setup-complete": "bash scripts/setup-complete-integration.sh",
+    "uninstall": "bash scripts/install-slash-commands.sh --uninstall && bash scripts/install-mcp-server.sh --uninstall",
+    "test": "npm run test:toml && npm run test:mcp",
+    "test:toml": "bash tests/test-toml-commands.sh",
+    "test:mcp": "cd mcp-server && npm test",
+    "build": "cd mcp-server && npm run build",
+    "build:docker": "docker build -t ramparts/gemini-cli-integration .",
+    "lint": "eslint . --ext .js,.ts,.json --fix",
+    "format": "prettier --write .",
+    "docs:serve": "cd docs && python3 -m http.server 8080",
+    "demo": "bash examples/run-demo.sh",
+    "validate": "bash scripts/validate-installation.sh"
+  },
+  "keywords": [
+    "ramparts",
+    "gemini-cli",
+    "mcp",
+    "security",
+    "scanner",
+    "vulnerability",
+    "ai",
+    "model-context-protocol",
+    "slash-commands",
+    "toml",
+    "integration"
+  ],
+  "author": "Javelin",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/getjavelin/ramparts.git",
+    "directory": "gemini-cli-integration"
+  },
+  "homepage": "https://github.com/getjavelin/ramparts/tree/feature/gemini-cli-integration/gemini-cli-integration#readme",
+  "bugs": {
+    "url": "https://github.com/getjavelin/ramparts/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "files": [
+    "slash-commands/**/*.toml",
+    "mcp-server/dist/**/*",
+    "mcp-server/package.json",
+    "scripts/*.sh",
+    "docs/**/*.md",
+    "examples/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "ramparts-mcp-server": "file:./mcp-server"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0"
+  },
+  "peerDependencies": {
+    "@google/gemini-cli": ">=1.0.0"
+  },
+  "bin": {
+    "ramparts-gemini-setup": "scripts/setup-complete-integration.sh",
+    "ramparts-gemini-install-commands": "scripts/install-slash-commands.sh",
+    "ramparts-gemini-install-mcp": "scripts/install-mcp-server.sh"
+  },
+  "preferGlobal": true,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

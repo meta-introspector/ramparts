@@ -1,0 +1,213 @@
+# Security Monitoring Setup Command
+# File: ~/.gemini/commands/security/monitor.toml or .gemini/commands/security/monitor.toml  
+# Usage: /security:monitor [interval] [alert-level]
+
+description = "Set up continuous security monitoring for MCP servers with automated alerts"
+
+prompt = """
+I need to establish continuous security monitoring for MCP servers.
+
+Configuration: {{args}}
+
+Please help me set up comprehensive security monitoring:
+
+1. **Monitoring Strategy Design**:
+   
+   **📊 Monitoring Scope:**
+   - All configured MCP servers in environment
+   - New MCP server discovery and registration
+   - Configuration change detection
+   - Security posture drift monitoring
+   
+   **⏰ Monitoring Schedule:**
+   - Parse interval from args (default: 60 minutes)
+   - Determine optimal scanning frequency
+   - Balance security coverage vs. resource usage
+   - Schedule non-intrusive scan timing
+
+2. **Automated Scanning Setup**:
+   
+   **🔄 Continuous Scanning Configuration:**
+   ```bash
+   # Create monitoring script
+   cat > ~/.local/bin/ramparts-monitor.sh << 'EOF'
+   #!/bin/bash
+   # Ramparts Security Monitor
+   INTERVAL={{args}} # minutes
+   ALERT_LEVEL="high" # critical, high, medium, all
+   
+   while true; do
+       echo "$(date): Starting security scan..."
+       ramparts scan-config --format json > /tmp/ramparts-scan-$(date +%Y%m%d-%H%M%S).json
+       
+       # Process results and send alerts if needed
+       python3 ~/.local/bin/ramparts-alert-processor.py /tmp/ramparts-scan-*.json
+       
+       sleep $((INTERVAL * 60))
+   done
+   EOF
+   chmod +x ~/.local/bin/ramparts-monitor.sh
+   ```
+
+3. **Alert System Configuration**:
+   
+   **🔔 Alert Channels Setup:**
+   - Email notifications for critical issues
+   - Slack/Teams integration for team alerts
+   - Dashboard updates for security status
+   - Log aggregation for audit trails
+   
+   **📈 Alert Thresholds:**
+   - CRITICAL: Immediate notification (SMS, email, Slack)
+   - HIGH: Email + team notification within 15 minutes
+   - MEDIUM: Daily digest email summary
+   - LOW: Weekly security report inclusion
+
+4. **Security Metrics Dashboard**:
+   
+   **📊 Key Security Metrics:**
+   ```
+   Security Posture Dashboard
+   ========================
+   
+   Overall Security Score: [0-100]
+   
+   🚨 Critical Vulnerabilities: [count] (Target: 0)
+   ⚠️ High Priority Issues: [count] (Target: <5)
+   📋 Medium Priority Items: [count] (Target: <20)
+   ℹ️ Informational Findings: [count]
+   
+   📈 Trend Analysis (30 days):
+   - Security score trend: [improving/stable/declining]
+   - New vulnerabilities detected: [count]
+   - Vulnerabilities resolved: [count]
+   - Mean time to resolution: [hours]
+   
+   🎯 Compliance Status:
+   - OWASP Top 10: [compliant/non-compliant]
+   - Security best practices: [X/Y checks passed]
+   - Last full audit: [date]
+   ```
+
+5. **Automated Response Actions**:
+   
+   **🤖 Automated Security Responses:**
+   
+   **For CRITICAL vulnerabilities:**
+   - Immediately disable affected MCP server
+   - Send emergency alert to security team
+   - Create incident ticket with details
+   - Initiate emergency response protocol
+   
+   **For HIGH priority issues:**
+   - Flag server for review within 24 hours
+   - Send detailed alert with remediation steps
+   - Schedule automatic re-scan after fix window
+   - Update security dashboard status
+   
+   **For MEDIUM/LOW issues:**
+   - Add to security backlog with priority
+   - Include in weekly security digest
+   - Track in security metrics dashboard
+   - Schedule for next security review cycle
+
+6. **Integration Setup**:
+   
+   **🔗 Tool Integrations:**
+   
+   **CI/CD Pipeline Integration:**
+   ```yaml
+   # .github/workflows/security-scan.yml
+   name: MCP Security Scan
+   on:
+     schedule:
+       - cron: '0 */6 * * *'  # Every 6 hours
+     push:
+       paths:
+         - '.gemini/settings.json'
+         - '.cursor/mcp.json'
+   
+   jobs:
+     security-scan:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - name: Install Ramparts
+           run: cargo install ramparts
+         - name: Run Security Scan
+           run: ramparts scan-config --report
+         - name: Upload Results
+           uses: actions/upload-artifact@v3
+           with:
+             name: security-scan-results
+             path: scan_*.md
+   ```
+   
+   **Monitoring System Integration:**
+   - Prometheus metrics export
+   - Grafana dashboard creation
+   - Splunk/ELK log forwarding
+   - PagerDuty incident creation
+
+7. **Security Monitoring Policies**:
+   
+   **📋 Monitoring Policies:**
+   
+   **New MCP Server Policy:**
+   - All new MCP servers must pass security scan
+   - Quarantine period for untrusted servers
+   - Approval workflow for production deployment
+   - Automated security baseline establishment
+   
+   **Change Management Policy:**
+   - Security re-scan on configuration changes
+   - Risk assessment for MCP server updates
+   - Rollback procedures for security issues
+   - Change approval for security-sensitive modifications
+
+8. **Incident Response Integration**:
+   
+   **🚨 Security Incident Workflow:**
+   
+   **Detection Phase:**
+   - Automated vulnerability detection
+   - Alert generation and routing
+   - Initial impact assessment
+   - Stakeholder notification
+   
+   **Response Phase:**
+   - Incident team activation
+   - Containment action execution
+   - Evidence collection and preservation
+   - Communication plan activation
+   
+   **Recovery Phase:**
+   - Vulnerability remediation
+   - System restoration and validation
+   - Security control enhancement
+   - Lessons learned documentation
+
+9. **Reporting and Analytics**:
+   
+   **📈 Security Reporting:**
+   
+   **Daily Security Brief:**
+   - New vulnerabilities detected
+   - Security alerts triggered
+   - Remediation progress updates
+   - System health indicators
+   
+   **Weekly Security Summary:**
+   - Security posture trends
+   - Vulnerability aging analysis
+   - Compliance status updates
+   - Team performance metrics
+   
+   **Monthly Executive Report:**
+   - Strategic security overview
+   - Risk landscape assessment
+   - Investment recommendations
+   - Compliance certification status
+
+Set up this comprehensive security monitoring system and provide the implementation steps and configuration files needed.
+"""
