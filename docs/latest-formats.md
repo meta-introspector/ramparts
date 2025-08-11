@@ -149,22 +149,28 @@ Ramparts automatically discovers and parses MCP configurations from the followin
 ```json
 {
   "mcpServers": {
-    "ramparts-mcp": {
+    "ramparts": {
       "command": "docker",
       "args": [
-        "run",
-        "--rm",
-        "-i",
-        "-v",
-        "/var/run/docker.sock:/var/run/docker.sock",
-        "-v",
-        "/Users/username/.cursor:/root/.cursor",
+        "run", "--rm", "-i",
+        "-v", "/var/run/docker.sock:/var/run/docker.sock",
+        "-v", "/Users/username:/Users/username",
+        "-e", "HOME=/Users/username",
         "ghcr.io/getjavelin/ramparts:latest"
       ],
-      "description": "Ramparts MCP server for security scanning"
+      "description": "Ramparts Security Scanner with Docker-in-Docker support"
     }
   }
 }
+```
+
+**Docker-in-Docker Configuration Features:**
+- **Docker Socket Access**: `-v /var/run/docker.sock:/var/run/docker.sock` enables scanning of Docker-based MCP servers (`stdio:docker[...]`)
+- **Home Directory Mounting**: `-v /Users/username:/Users/username` provides access to IDE configuration files
+- **Environment Variables**: `-e HOME=/Users/username` ensures proper path resolution for configuration discovery
+- **Available Tools**: `scan` and `scan-config` for comprehensive MCP security analysis
+
+This configuration allows ramparts to successfully scan Docker-based MCP servers that would otherwise fail with "Docker command not found" errors.
 ```
 
 ### Claude Desktop Format (claude_desktop_config.json)
