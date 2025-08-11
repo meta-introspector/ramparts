@@ -6,10 +6,11 @@ Ramparts supports scanning MCP (Model Context Protocol) servers from all major I
 
 Ramparts automatically discovers and parses MCP configurations from the following IDEs:
 - **VS Code** (Visual Studio Code)
-- **Cursor** 
+- **Cursor**
 - **Windsurf** (Codeium)
 - **Claude Desktop**
-- **Claude Code** 
+- **Claude Code**
+- **Gemini CLI**
 - **Zed**
 - **Neovim**
 - **Helix**
@@ -42,6 +43,10 @@ Ramparts automatically discovers and parses MCP configurations from the followin
 - `~/.claude/settings.json` (User/Global)
 - `.claude/settings.json` (Project shared)
 - `.claude/settings.local.json` (Project personal)
+
+### Gemini CLI
+- `~/.gemini/settings.json` (User/Global)
+- `.gemini/settings.json` (Project/Workspace)
 
 ### Zed
 - `~/Library/Application Support/Zed/mcp.json` (macOS)
@@ -136,6 +141,29 @@ Ramparts automatically discovers and parses MCP configurations from the followin
         "timeout": 30,
         "format": "json"
     }
+}
+```
+
+### Gemini CLI Format (settings.json)
+
+```json
+{
+  "mcpServers": {
+    "ramparts-mcp": {
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-v",
+        "/var/run/docker.sock:/var/run/docker.sock",
+        "-v",
+        "/Users/username/.cursor:/root/.cursor",
+        "ghcr.io/getjavelin/ramparts:latest"
+      ],
+      "description": "Ramparts MCP server for security scanning"
+    }
+  }
 }
 ```
 
