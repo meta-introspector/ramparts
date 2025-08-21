@@ -312,6 +312,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.DEVOPS_GITHUB_TOKEN }}
         run: |
-          gh workflow run ${{ env.CICD_WORKFLOW }} \
+          gh workflow run ${{ env.RELEASE_WORKFLOW }} \
             --repo ${{ github.repository_owner }}/${{ env.DEVOPS_REPO }} \
             --ref ${{ env.DEVOPS_BRANCH }} -f RELEASE_TAG=${{ env.RELEASE_NAME }}
