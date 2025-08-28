@@ -1,4 +1,4 @@
-name: CICD Build - Javelin Ramparts Server
+name: Cron Build - Javelin Ramparts Server
 
 on:
   workflow_dispatch:
