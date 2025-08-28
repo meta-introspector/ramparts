@@ -10,7 +10,7 @@ Think of Ramparts server mode as your security scanner running as a service inst
 
 If you're running `ramparts scan` more than once, you probably want server mode. Here are some common scenarios:
 
-**You're building CI/CD pipelines** and want to fail builds when MCP servers have critical security issues. Instead of installing and running the CLI in every pipeline, just POST to `/scan` and check the response.
+**You're building CI/CD pipelines** and want to fail builds when MCP servers have critical security issues. Instead of installing and running the CLI in every pipeline, just POST to `/v1/ramparts/scan` and check the response.
 
 **Your team is using multiple MCP servers** and you want a centralized way to monitor their security posture. Start one Ramparts server, point it at all your MCP endpoints, and you've got a security dashboard.
 
@@ -53,7 +53,7 @@ Once started, the server provides a REST API with the following endpoints:
 ## API Endpoints
 
 ### 1. Health Check
-**GET /health**
+**GET /v1/ramparts/health**
 
 Check server health and protocol information.
 
@@ -69,7 +69,7 @@ Check server health and protocol information.
 ```
 
 ### 2. Protocol Information
-**GET /protocol**
+**GET /v1/ramparts/protocol**
 
 Get detailed MCP protocol information and supported capabilities.
 
@@ -108,7 +108,7 @@ Get detailed MCP protocol information and supported capabilities.
 ```
 
 ### 3. API Documentation
-**GET /**
+**GET /v1/ramparts/**
 
 Get interactive API documentation with examples.
 
@@ -119,13 +119,13 @@ Get interactive API documentation with examples.
   "version": "0.2.0",
   "protocol_version": "2025-06-18",
   "endpoints": {
-    "GET /health": "Health check with protocol info",
-    "GET /protocol": "MCP protocol information",
-    "POST /scan": "Scan a single MCP server",
-    "POST /validate": "Validate scan configuration",
-    "POST /batch-scan": "Scan multiple MCP servers",
-    "POST /refresh-tools": "Refresh tool descriptions from MCP servers",
-    "GET /": "API documentation"
+    "GET /v1/ramparts/health": "Health check with protocol info",
+    "GET /v1/ramparts/protocol": "MCP protocol information",
+    "POST /v1/ramparts/scan": "Scan a single MCP server",
+    "POST /v1/ramparts/validate": "Validate scan configuration",
+    "POST /v1/ramparts/batch-scan": "Scan multiple MCP servers",
+    "POST /v1/ramparts/refresh-tools": "Refresh tool descriptions from MCP servers",
+    "GET /v1/ramparts/": "API documentation"
   },
   "transports": {
     "http": {
@@ -152,7 +152,7 @@ Get interactive API documentation with examples.
 ```
 
 ### 4. Single Server Scan
-**POST /scan**
+**POST /v1/ramparts/scan**
 
 Scan a single MCP server for security vulnerabilities with intelligent change detection.
 
@@ -233,7 +233,7 @@ Scan a single MCP server for security vulnerabilities with intelligent change de
 For Javelin MCP servers, you can include the `X-Javelin-Apikey` header which will be automatically converted to the appropriate authentication formats:
 
 ```bash
-curl -X POST http://localhost:3000/scan \
+curl -X POST http://localhost:3000/v1/ramparts/scan \
   -H "Content-Type: application/json" \
   -H "X-Javelin-Apikey: your-javelin-key" \
   -d '{
@@ -430,7 +430,7 @@ curl -X POST http://localhost:3000/scan \
 ```
 
 ### 5. Configuration Validation
-**POST /validate**
+**POST /v1/ramparts/validate**
 
 Validate scan configuration without performing actual scan.
 
@@ -466,7 +466,7 @@ Validate scan configuration without performing actual scan.
 ```
 
 ### 6. Batch Scan
-**POST /batch-scan**
+**POST /v1/ramparts/batch-scan**
 
 Scan multiple MCP servers with shared configuration.
 
@@ -493,7 +493,7 @@ Scan multiple MCP servers with shared configuration.
 
 **Javelin Integration:**
 ```bash
-curl -X POST http://localhost:3000/batch-scan \
+curl -X POST http://localhost:3000/v1/ramparts/batch-scan \
   -H "Content-Type: application/json" \
   -H "X-Javelin-Apikey: your-javelin-key" \
   -d '{
@@ -560,12 +560,12 @@ curl -X POST http://localhost:3000/batch-scan \
 
 ### Example: Basic Health Check
 ```bash
-curl -X GET http://localhost:3000/health
+curl -X GET http://localhost:3000/v1/ramparts/health
 ```
 
 ### Example: Single Server Scan
 ```bash
-curl -X POST http://localhost:3000/scan \
+curl -X POST http://localhost:3000/v1/ramparts/scan \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://api.githubcopilot.com/mcp/",
@@ -579,7 +579,7 @@ curl -X POST http://localhost:3000/scan \
 ```
 
 ### 7. Refresh Tools
-**POST /refresh-tools**
+**POST /v1/ramparts/refresh-tools**
 
 Refresh tool descriptions from one or more MCP servers. This endpoint fetches the latest tool definitions from the specified servers and updates the internal cache.
 
@@ -645,7 +645,7 @@ Refresh tool descriptions from one or more MCP servers. This endpoint fetches th
 
 **Javelin Integration:**
 ```bash
-curl -X POST http://localhost:3000/refresh-tools \
+curl -X POST http://localhost:3000/v1/ramparts/refresh-tools \
   -H "Content-Type: application/json" \
   -H "X-Javelin-Apikey: your-javelin-key" \
   -d '{
@@ -656,7 +656,7 @@ curl -X POST http://localhost:3000/refresh-tools \
 
 ### Example: STDIO Server Scan
 ```bash
-curl -X POST http://localhost:3000/scan \
+curl -X POST http://localhost:3000/v1/ramparts/scan \
   -H "Content-Type: application/json" \
   -d '{
     "url": "stdio:///usr/local/bin/my-mcp-server",
@@ -667,7 +667,7 @@ curl -X POST http://localhost:3000/scan \
 
 ### Example: Batch Scan
 ```bash
-curl -X POST http://localhost:3000/batch-scan \
+curl -X POST http://localhost:3000/v1/ramparts/batch-scan \
   -H "Content-Type: application/json" \
   -d '{
     "urls": [
@@ -685,7 +685,7 @@ curl -X POST http://localhost:3000/batch-scan \
 
 ### Example: Configuration Validation
 ```bash
-curl -X POST http://localhost:3000/validate \
+curl -X POST http://localhost:3000/v1/ramparts/validate \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://api.githubcopilot.com/mcp/",
