@@ -86,8 +86,14 @@ impl MCPScannerServer {
             .route("/v1/ramparts/validate", post(validate_endpoint))
             .route("/v1/ramparts/batch-scan", post(batch_scan_endpoint))
             .route("/v1/ramparts/refresh-tools", post(refresh_tools_endpoint))
-            .route("/v1/ramparts/register-server", post(register_server_endpoint))
-            .route("/v1/ramparts/unregister-server", post(unregister_server_endpoint))
+            .route(
+                "/v1/ramparts/register-server",
+                post(register_server_endpoint),
+            )
+            .route(
+                "/v1/ramparts/unregister-server",
+                post(unregister_server_endpoint),
+            )
             .route("/v1/ramparts/list-servers", get(list_servers_endpoint))
             .layer(cors)
             .layer(TraceLayer::new_for_http())
