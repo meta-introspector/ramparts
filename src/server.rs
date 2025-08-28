@@ -79,16 +79,22 @@ impl MCPScannerServer {
 
         // Create router with routes
         let app = Router::new()
-            .route("/", get(api_docs))
-            .route("/health", get(health_check))
-            .route("/protocol", get(protocol_info))
-            .route("/scan", post(scan_endpoint))
-            .route("/validate", post(validate_endpoint))
-            .route("/batch-scan", post(batch_scan_endpoint))
-            .route("/refresh-tools", post(refresh_tools_endpoint))
-            .route("/register-server", post(register_server_endpoint))
-            .route("/unregister-server", post(unregister_server_endpoint))
-            .route("/list-servers", get(list_servers_endpoint))
+            .route("/v1/ramparts/", get(api_docs))
+            .route("/v1/ramparts/health", get(health_check))
+            .route("/v1/ramparts/protocol", get(protocol_info))
+            .route("/v1/ramparts/scan", post(scan_endpoint))
+            .route("/v1/ramparts/validate", post(validate_endpoint))
+            .route("/v1/ramparts/batch-scan", post(batch_scan_endpoint))
+            .route("/v1/ramparts/refresh-tools", post(refresh_tools_endpoint))
+            .route(
+                "/v1/ramparts/register-server",
+                post(register_server_endpoint),
+            )
+            .route(
+                "/v1/ramparts/unregister-server",
+                post(unregister_server_endpoint),
+            )
+            .route("/v1/ramparts/list-servers", get(list_servers_endpoint))
             .layer(cors)
             .layer(TraceLayer::new_for_http())
             .with_state(state);
@@ -228,16 +234,16 @@ async fn api_docs() -> Json<Value> {
         "version": "0.2.0",
         "protocol_version": "2025-06-18",
         "endpoints": {
-            "GET /health": "Health check with protocol info",
-            "GET /protocol": "MCP protocol information",
-            "POST /scan": "Scan a single MCP server",
-            "POST /validate": "Validate scan configuration",
-            "POST /batch-scan": "Scan multiple MCP servers",
-            "POST /refresh-tools": "Refresh tool descriptions from MCP servers",
-            "POST /register-server": "Register a server for automatic daily refresh",
-            "POST /unregister-server": "Unregister a server from automatic refresh",
-            "GET /list-servers": "List all registered servers for automatic refresh",
-            "GET /": "API documentation"
+            "GET /v1/ramparts/health": "Health check with protocol info",
+            "GET /v1/ramparts/protocol": "MCP protocol information",
+            "POST /v1/ramparts/scan": "Scan a single MCP server",
+            "POST /v1/ramparts/validate": "Validate scan configuration",
+            "POST /v1/ramparts/batch-scan": "Scan multiple MCP servers",
+            "POST /v1/ramparts/refresh-tools": "Refresh tool descriptions from MCP servers",
+            "POST /v1/ramparts/register-server": "Register a server for automatic daily refresh",
+            "POST /v1/ramparts/unregister-server": "Unregister a server from automatic refresh",
+            "GET /v1/ramparts/list-servers": "List all registered servers for automatic refresh",
+            "GET /v1/ramparts/": "API documentation"
         },
         "transports": {
             "http": {
@@ -263,7 +269,7 @@ async fn api_docs() -> Json<Value> {
         },
 
         "example": {
-            "POST /scan": {
+            "POST /v1/ramparts/scan": {
                 "url": "http://localhost:3000",
                 "timeout": 180,
                 "http_timeout": 30,
