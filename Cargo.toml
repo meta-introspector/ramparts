@@ -30,50 +30,50 @@ yara-x-scanning = ["yara-x", "glob"]
 
 [dependencies]
 # CLI argument parsing
-clap = { version = "4.4", features = ["derive"] }
+clap = { workspace = true, features = ["derive"] }
 
 # Async runtime
-tokio = { version = "1.35", features = ["full"] }
+tokio = { workspace = true, features = ["full"] }
 
 # HTTP client
-reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], default-features = false }
+reqwest = { workspace = true, default-features = false, features = ["json", "rustls-tls", "stream"] }
 
 # Async streams
-futures-util = "0.3"
-futures = "0.3"
+futures-util = { workspace = true }
+futures = { workspace = true }
 
 # JSON handling
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 serde_yaml = "0.9"
-sha2 = "0.10"
-schemars = "1"
+sha2 = { workspace = true }
+schemars = { workspace = true }
 
 # Logging
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
 
 # Error handling
-anyhow = "1.0"
-thiserror = "1.0"
+anyhow = { workspace = true }
+thiserror = { workspace = true }
 
 # URL parsing
-url = "2.4"
+url = { workspace = true }
 
 # Regular expressions for environment variable expansion
-regex = "1.10"
+regex = { workspace = true }
 
 # Time handling
-chrono = { version = "0.4", features = ["serde"] }
+chrono = { workspace = true, features = ["serde"] }
 
 # Table formatting for output
 tabled = "0.20"
 
 # Configuration
-config = "0.14"
+config = { workspace = true }
 
 # Directory handling
-dirs = "5.0"
+dirs = { workspace = true }
 
 # File pattern matching for dynamic YARA rules
 glob = { version = "0.3", optional = true }
@@ -83,9 +83,9 @@ colored = "2.0"
 spinners = "4.1.1"
 
 # Web framework for microservice
-axum = { version = "0.7", features = ["macros"] }
-tower-http = { version = "0.5", features = ["cors", "trace"] }
-tower = "0.4"
+axum = { workspace = true, features = ["macros"] }
+tower-http = { workspace = true, features = ["cors", "trace"] }
+tower = { workspace = true }
 
 # JSON-RPC handling for microservice
 jsonrpc-core = "18.0"
@@ -114,7 +114,7 @@ rmcp = { version = "0.3.2", features = [
 ] }
 
 # Random number generation for request IDs
-rand = "0.8"
+rand = { workspace = true }
 
 [build-dependencies]
 chrono = "0.4"
